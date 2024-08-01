@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  redis:
+    build: 
+      context: .
+      dockerfile: ./redis/Dockerfile
+    container_name: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs-service
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: 'development'
+      JWT_SECRET: 'secret'
+      PORT_SERVICE: 3901
+      SLACK_WEBHOOK_API: slack_webhook_api
+      LINK_REDIRECT_AUTH0_CALLBACK: 'http://localhost:3900'
+      REDIS_NAME: REDIS_SERVICE
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+    volumes:
+      - .:/usr/src/app
+      - node_modules:/usr/src/app/node_modules
+    working_dir: /usr/src/app
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+volumes:
+  node_modules:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
